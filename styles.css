@@ -1,19 +1,21 @@
 :root{
   --oh-bg: #0b1020;
-  --oh-panel: #0f1733;
-  --oh-card: #101b3f;
-  --oh-border: rgba(255,255,255,.08);
+  --oh-panel: rgba(15,23,51,.55);
+  --oh-card: rgba(16,27,63,.52);
+  --oh-border: rgba(255,255,255,.06);
   --oh-text: rgba(255,255,255,.92);
-  --oh-muted: rgba(255,255,255,.65);
-  --oh-soft: rgba(255,255,255,.08);
-  --oh-accent: #7c5cff;   /* acento */
-  --oh-accent2: #20c997;  /* éxito */
+  --oh-muted: rgba(255,255,255,.62);
+
+  --oh-accent: #7c5cff;
+  --oh-accent2: #20c997;
+  --oh-link: rgba(124,92,255,.95);
 }
 
 .bg-app{
-  background: radial-gradient(1200px 800px at 20% 10%, rgba(124,92,255,.25), transparent 50%),
-              radial-gradient(900px 600px at 90% 10%, rgba(32,201,151,.18), transparent 45%),
-              linear-gradient(180deg, #070a14, var(--oh-bg));
+  /* calmer background: one soft glow + clean gradient */
+  background:
+    radial-gradient(900px 600px at 18% 0%, rgba(124,92,255,.10), transparent 58%),
+    linear-gradient(180deg, #070a14, var(--oh-bg));
   color: var(--oh-text);
 }
 
@@ -32,79 +34,77 @@ a{ color: inherit; }
 }
 
 .oh-sidebar{
-  background: linear-gradient(180deg, rgba(255,255,255,.04), transparent 65%),
-              rgba(15,23,51,.75);
+  background: rgba(15,23,51,.35);
   border-right: 1px solid var(--oh-border);
   backdrop-filter: blur(10px);
 }
 
-.oh-main{
-  background: transparent;
-}
+.oh-main{ background: transparent; }
 
 .oh-topbar{
   position: sticky;
   top: 0;
   z-index: 1010;
-  background: rgba(11,16,32,.72);
+  background: rgba(11,16,32,.62);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--oh-border);
 }
 
 .oh-card{
-  background: rgba(16,27,63,.7);
+  background: var(--oh-card);
   border: 1px solid var(--oh-border);
   border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  box-shadow: 0 8px 22px rgba(0,0,0,.16);
 }
 
 .oh-card-soft{
-  background: rgba(255,255,255,.04);
-  border: 1px dashed rgba(255,255,255,.14);
+  background: rgba(255,255,255,.035);
+  border: 1px solid rgba(255,255,255,.08);
   border-radius: 16px;
 }
 
 .oh-pill{
   border: 1px solid var(--oh-border);
-  background: rgba(255,255,255,.04);
+  background: rgba(255,255,255,.03);
   border-radius: 999px;
   padding: .35rem .65rem;
 }
 
 .oh-nav .nav-link{
-  color: rgba(255,255,255,.75);
+  color: rgba(255,255,255,.76);
   border-radius: 12px;
   padding: .6rem .75rem;
   display: flex;
   align-items: center;
   gap: .6rem;
+  border: 1px solid transparent;
 }
 .oh-nav .nav-link:hover{
-  background: rgba(255,255,255,.06);
+  background: rgba(255,255,255,.04);
   color: var(--oh-text);
 }
 .oh-nav .nav-link.active{
-  background: rgba(124,92,255,.18);
-  border: 1px solid rgba(124,92,255,.35);
+  background: rgba(124,92,255,.12);
+  border-color: rgba(124,92,255,.28);
   color: var(--oh-text);
 }
 
 .oh-badge{
   border: 1px solid var(--oh-border);
-  background: rgba(255,255,255,.04);
-  color: rgba(255,255,255,.85);
+  background: rgba(255,255,255,.03);
+  color: rgba(255,255,255,.86);
 }
 .badge-accent{
-  background: rgba(124,92,255,.18);
-  border-color: rgba(124,92,255,.35);
+  background: rgba(124,92,255,.14);
+  border-color: rgba(124,92,255,.28);
 }
 .badge-success2{
-  background: rgba(32,201,151,.16);
-  border-color: rgba(32,201,151,.35);
+  background: rgba(32,201,151,.12);
+  border-color: rgba(32,201,151,.26);
 }
 
 .oh-input{
-  background: rgba(255,255,255,.06) !important;
+  background: rgba(255,255,255,.045) !important;
   border: 1px solid rgba(255,255,255,.10) !important;
   color: var(--oh-text) !important;
 }
@@ -112,11 +112,9 @@ a{ color: inherit; }
 
 .btn-accent{
   background: var(--oh-accent);
-  border-color: rgba(124,92,255,.4);
+  border-color: rgba(124,92,255,.35);
 }
-.btn-accent:hover{
-  filter: brightness(1.05);
-}
+.btn-accent:hover{ filter: brightness(1.05); }
 
 .table-oh{
   --bs-table-bg: transparent;
@@ -127,7 +125,7 @@ a{ color: inherit; }
 .smallcaps{
   font-variant-caps: all-small-caps;
   letter-spacing: .08em;
-  color: rgba(255,255,255,.6);
+  color: rgba(255,255,255,.55);
 }
 
 .kpi{
@@ -135,8 +133,17 @@ a{ color: inherit; }
   font-weight: 700;
 }
 
+.oh-logo{
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--oh-border);
+  background: rgba(255,255,255,.03);
+  padding: 6px;
+}
+
 .skeleton{
-  background: linear-gradient(90deg, rgba(255,255,255,.05), rgba(255,255,255,.10), rgba(255,255,255,.05));
+  background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.08), rgba(255,255,255,.04));
   background-size: 200% 100%;
   animation: sh 1.1s infinite;
   border-radius: 10px;
