@@ -1,4 +1,4 @@
-/* OnboardHero Prototype — single-page static app (hash router) */
+/* OnboardHero Prototype — v2.0 (Branding + calmer UI) */
 
 const state = {
   session: ohLoad(OH_KEYS.session, { isAuthed: false }),
@@ -34,21 +34,19 @@ function toast(msg, type="info"){
     <div class="toast-header bg-transparent border-0 text-white">
       <i class="bi bi-${icon} me-2"></i>
       <strong class="me-auto">OnboardHero</strong>
-      <small class="text-muted-oh">ahora</small>
+      <small class="text-muted-oh">now</small>
       <button type="button" class="btn-close btn-close-white ms-2" data-bs-dismiss="toast" aria-label="Cerrar"></button>
     </div>
     <div class="toast-body pt-0">${escapeHtml(msg)}</div>
   </div>`;
   host.insertAdjacentHTML("beforeend", html);
   const el = $("#"+id);
-  const t = new bootstrap.Toast(el, { delay: 2600 });
+  const t = new bootstrap.Toast(el, { delay: 2400 });
   el.addEventListener("hidden.bs.toast", ()=> el.remove());
   t.show();
 }
 
-function navigate(path){
-  location.hash = path;
-}
+function navigate(path){ location.hash = path; }
 
 function requireAuth(){
   if(!state.session?.isAuthed){
@@ -74,13 +72,11 @@ function renderShell(contentHtml){
   $("#app").innerHTML = `
     <div class="oh-shell">
       <aside class="oh-sidebar p-3">
-        <div class="d-flex align-items-center gap-2 px-2 py-2 mb-2">
-          <div class="rounded-3 p-2" style="background: rgba(124,92,255,.20); border:1px solid rgba(124,92,255,.35)">
-            <i class="bi bi-stars"></i>
-          </div>
-          <div>
+        <div class="d-flex align-items-center gap-2 px-2 py-2 mb-3">
+          <img src="./assets/logo.svg" alt="OnboardHero" class="oh-logo" onerror="this.style.display='none'">
+          <div class="lh-sm">
             <div class="fw-semibold">${escapeHtml(brand)}</div>
-            <div class="smallcaps">onboarding ops</div>
+            <div class="text-muted-oh small">Onboarding OS</div>
           </div>
         </div>
 
@@ -116,9 +112,9 @@ function renderShell(contentHtml){
         <header class="oh-topbar px-3 py-3">
           <div class="container-fluid">
             <div class="d-flex align-items-center justify-content-between gap-3">
-              <div class="d-flex align-items-center gap-2">
+              <div class="d-flex flex-column">
                 <div class="fw-semibold">Welcome back, ${escapeHtml(state.user.name.split(" ")[0])}</div>
-                <span class="badge oh-badge">Mon, 26 Jan 2026</span>
+                <div class="text-muted-oh small d-none d-md-block">Make onboarding consistent, measurable, and fast.</div>
               </div>
 
               <div class="d-flex align-items-center gap-2">
@@ -129,7 +125,7 @@ function renderShell(contentHtml){
                 <button class="btn btn-accent" id="btnQuickCreate">
                   <i class="bi bi-plus-lg me-1"></i>New journey
                 </button>
-                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:38px;height:38px;background:rgba(255,255,255,.08);border:1px solid var(--oh-border)">
+                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:38px;height:38px;background:rgba(255,255,255,.04);border:1px solid var(--oh-border)">
                   <i class="bi bi-person-fill"></i>
                 </div>
               </div>
@@ -162,11 +158,10 @@ function renderShell(contentHtml){
     if(e.key === "Enter"){
       const q = e.target.value.trim().toLowerCase();
       if(!q) return;
-      // simple heuristic: send to most relevant section
       if(q.includes("template") || q.includes("industr")) return navigate("#/templates");
       if(q.includes("ana") || q.includes("diego") || q.includes("people") || q.includes("persona")) return navigate("#/people");
       navigate("#/journeys");
-      toast(`Buscando “${q}” (demo)`, "info");
+      toast(`Searching “${q}” (demo)`, "info");
     }
   });
 }
@@ -192,15 +187,13 @@ function render(){
 
   if(!requireAuth()) return;
 
-  // Protected views render inside shell
   renderShell(match.view());
-  bindGlobalModals(); // ensure modals present
+  bindGlobalModals();
   bindViewEvents(hash);
 }
 
 window.addEventListener("hashchange", render);
 window.addEventListener("load", ()=>{
-  // authed? go dashboard
   if(state.session?.isAuthed && !location.hash) location.hash = "#/dashboard";
   render();
 });
@@ -213,7 +206,7 @@ function viewLogin(){
       <div class="col-12 col-md-8 col-lg-5">
         <div class="text-center mb-4">
           <div class="d-inline-flex align-items-center gap-2 px-3 py-2 oh-pill">
-            <i class="bi bi-stars"></i>
+            <img src="./assets/logo.svg" alt="OnboardHero" style="width:22px;height:22px" onerror="this.style.display='none'">
             <span class="fw-semibold">OnboardHero</span>
             <span class="text-muted-oh small">Prototype</span>
           </div>
@@ -283,8 +276,8 @@ function viewDashboard(){
       <td>${statusBadge(p.status)}</td>
       <td style="min-width:170px">
         <div class="d-flex align-items-center gap-2">
-          <div class="progress flex-grow-1" role="progressbar" aria-label="progreso" aria-valuenow="${p.progress}" aria-valuemin="0" aria-valuemax="100" style="height:8px;background:rgba(255,255,255,.06);">
-            <div class="progress-bar" style="width:${p.progress}%; background: rgba(32,201,151,.9)"></div>
+          <div class="progress flex-grow-1" role="progressbar" aria-label="progreso" aria-valuenow="${p.progress}" aria-valuemin="0" aria-valuemax="100" style="height:8px;background:rgba(255,255,255,.05);">
+            <div class="progress-bar" style="width:${p.progress}%; background: rgba(32,201,151,.85)"></div>
           </div>
           <div class="text-muted-oh small">${p.progress}%</div>
         </div>
@@ -334,26 +327,12 @@ function viewDashboard(){
           </div>
 
           <div class="mt-3">
-            <canvas id="chartHealth" height="220" aria-label="chart"></canvas>
+            <canvas id="chartHealth" height="240" aria-label="chart"></canvas>
           </div>
 
-          <div class="row g-2 mt-3">
-            <div class="col-6">
-              <div class="oh-card-soft p-3">
-                <div class="text-muted-oh small">At-risk</div>
-                <div class="kpi">2</div>
-                <div class="text-muted-oh small">low activity 7d</div>
-              </div>
-            </div>
-            <div class="col-6">
-              <div class="oh-card-soft p-3">
-                <div class="text-muted-oh small">Time-to-ready</div>
-                <div class="kpi">18d</div>
-                <div class="text-muted-oh small">median</div>
-              </div>
-            </div>
+          <div class="text-muted-oh small mt-3">
+            Tip para el TFM: “calidad” = consistencia + señales (manager touches, sentimiento, time-to-ready).
           </div>
-
         </div>
       </div>
     </div>
@@ -404,7 +383,7 @@ function viewTemplates(){
             <div class="fw-semibold mt-1">${escapeHtml(t.title)}</div>
             <div class="text-muted-oh small mt-1">Level: <span class="badge oh-badge">${escapeHtml(t.level)}</span></div>
           </div>
-          <div class="rounded-3 p-2" style="background:rgba(255,255,255,.06);border:1px solid var(--oh-border)">
+          <div class="rounded-3 p-2" style="background:rgba(255,255,255,.03);border:1px solid var(--oh-border)">
             <i class="bi bi-bookmarks"></i>
           </div>
         </div>
@@ -568,7 +547,7 @@ function viewSettings(){
             <label class="form-label text-muted-oh">Workspace name</label>
             <input id="setBrandName" class="form-control oh-input" value="${escapeHtml(s.brandName)}" />
           </div>
-          <div class="mb-1 text-muted-oh small">Tip: en el TFM, refuerza que el “branding” reduce fricción y aumenta adopción.</div>
+          <div class="mb-1 text-muted-oh small">Tip: el branding reduce fricción y aumenta adopción.</div>
         </div>
       </div>
 
@@ -588,7 +567,7 @@ function viewSettings(){
           <select id="setPermMode" class="form-select oh-input">
             ${["Role-based","Team-based","Custom"].map(x=>`<option ${s.permissionMode===x?"selected":""}>${x}</option>`).join("")}
           </select>
-          <div class="text-muted-oh small mt-2">Governance simple para escalar sin caos (HR + managers + IT).</div>
+          <div class="text-muted-oh small mt-2">Governance simple: HR + managers + IT.</div>
         </div>
       </div>
     </div>
@@ -651,7 +630,7 @@ function bindViewEvents(hash){
       s.permissionMode = $("#setPermMode").value;
       setSettings(s);
       toast("Settings saved.", "success");
-      render(); // refresh brand in sidebar
+      render();
     });
   }
 }
@@ -687,7 +666,10 @@ function statusBadge(status){
 }
 
 function emptyRow(msg){
-  return `<tr><td colspan="6" class="text-center text-muted-oh py-4">${escapeHtml(msg)}</td></tr>`;
+  return `<tr><td colspan="6" class="text-center text-muted-oh py-4">
+    ${escapeHtml(msg)}<br>
+    <a href="#/templates" class="text-decoration-none" style="color: var(--oh-link);">Browse templates</a>
+  </td></tr>`;
 }
 
 function journeyRow(j){
@@ -766,8 +748,8 @@ function initDashboardCharts(){
     options: {
       plugins: { legend: { display: false } },
       scales: {
-        x: { ticks: { color: "rgba(255,255,255,.6)" }, grid: { color: "rgba(255,255,255,.06)" } },
-        y: { ticks: { color: "rgba(255,255,255,.6)" }, grid: { color: "rgba(255,255,255,.06)" }, suggestedMin: 0, suggestedMax: 100 }
+        x: { ticks: { color: "rgba(255,255,255,.6)" }, grid: { color: "rgba(255,255,255,.05)" } },
+        y: { ticks: { color: "rgba(255,255,255,.6)" }, grid: { color: "rgba(255,255,255,.05)" }, suggestedMin: 0, suggestedMax: 100 }
       }
     }
   });
@@ -790,8 +772,8 @@ function initAnalyticsCharts(){
     options: {
       plugins: { legend: { display: false } },
       scales: {
-        x: { ticks: { color: "rgba(255,255,255,.6)" }, grid: { color: "rgba(255,255,255,.06)" } },
-        y: { ticks: { color: "rgba(255,255,255,.6)" }, grid: { color: "rgba(255,255,255,.06)" } }
+        x: { ticks: { color: "rgba(255,255,255,.6)" }, grid: { color: "rgba(255,255,255,.05)" } },
+        y: { ticks: { color: "rgba(255,255,255,.6)" }, grid: { color: "rgba(255,255,255,.05)" } }
       }
     }
   });
@@ -900,8 +882,8 @@ function modalPersonDetail(journeys){
                   </div>
                   <span id="personStatus" class="badge oh-badge">—</span>
                 </div>
-                <div class="progress mt-2" style="height:10px;background:rgba(255,255,255,.06);">
-                  <div class="progress-bar" id="personProgBar" style="width:0%;background:rgba(32,201,151,.9)"></div>
+                <div class="progress mt-2" style="height:10px;background:rgba(255,255,255,.05);">
+                  <div class="progress-bar" id="personProgBar" style="width:0%;background:rgba(32,201,151,.85)"></div>
                 </div>
 
                 <div class="text-muted-oh small mt-3">Assigned journey</div>
@@ -920,7 +902,7 @@ function modalPersonDetail(journeys){
             <div class="col-12">
               <div class="oh-card-soft p-3">
                 <div class="fw-semibold">Manager checklist (demo)</div>
-                <div class="text-muted-oh small">Asegura consistencia: 3 toques clave para reducir drop-off.</div>
+                <div class="text-muted-oh small">3 toques clave para reducir drop-off.</div>
                 <div class="row g-2 mt-2">
                   ${["Kickoff 1:1", "Week-2 feedback", "Day-30 review"].map(x=>`
                     <div class="col-12 col-md-4">
@@ -960,7 +942,11 @@ function openPersonModal(id){
 
   $("#personProg").textContent = `${p.progress || 0}%`;
   $("#personProgBar").style.width = `${p.progress || 0}%`;
-  $("#personStatus").outerHTML = statusBadge(p.status).replace('oh-badge', 'oh-badge').replace('>', ` id="personStatus">`);
+
+  // set status badge text
+  const statusEl = $("#personStatus");
+  statusEl.className = "badge oh-badge";
+  statusEl.textContent = p.status;
 
   $("#personJourney").value = p.journeyId || "";
   $("#personStatusSel").value = p.status;
@@ -976,7 +962,6 @@ function savePersonModal(){
   p.journeyId = $("#personJourney").value || "";
   p.status = $("#personStatusSel").value;
 
-  // Demo: if completed, set 100
   if(p.status === "Completed") p.progress = 100;
   if(p.status === "Invited") p.progress = 0;
 
@@ -987,19 +972,18 @@ function savePersonModal(){
   render();
 }
 
-// --- Journey Wizard (modal injected) ---
+// --- Journey Wizard ---
 function openJourneyWizard(opts = {}){
   if(!$("#modalJourneyWizard")){
     document.body.insertAdjacentHTML("beforeend", journeyWizardModal());
   }
   const fromTemplate = opts.fromTemplate || null;
 
-  // reset wizard
   $("#jwName").value = fromTemplate ? `${fromTemplate.title} — 30/60/90` : "New journey — 30/60/90";
   $("#jwRole").value = fromTemplate ? (fromTemplate.title.includes("SDR") ? "Sales Development Rep" : "Role") : "Role";
   $("#jwIndustry").value = fromTemplate ? fromTemplate.industry : "SaaS B2B";
 
-  $("#jw30").value = fromTemplate ? "Access & tools\nRole clarity\nBuddy system\nFirst wins" : "Access & tools\nRole clarity\nBuddy system\nFirst wins";
+  $("#jw30").value = "Access & tools\nRole clarity\nBuddy system\nFirst wins";
   $("#jw60").value = "Manager cadence\nPlaybooks\nSkill validation\nPeer feedback";
   $("#jw90").value = "Autonomy\nKPIs ownership\nGrowth plan\nQuarter goals";
 
@@ -1080,7 +1064,7 @@ function journeyWizardModal(){
                   <div class="oh-card-soft p-3 mt-3">
                     <div class="text-muted-oh small">Product principle</div>
                     <div class="fw-semibold">Reduce ambiguity → increase adoption.</div>
-                    <div class="text-muted-oh small">OnboardHero estandariza experiencia y permite medir progreso con señales reales.</div>
+                    <div class="text-muted-oh small">Convertimos onboarding en un sistema medible, no un PDF.</div>
                   </div>
 
                 </div>
@@ -1112,14 +1096,6 @@ function journeyWizardModal(){
                 </div>
               </div>
             </div>
-
-            <div class="oh-card-soft p-3 mt-3">
-              <div class="fw-semibold">UX note</div>
-              <div class="text-muted-oh small">
-                Un buen journey mezcla tareas “access”, “skills”, “culture” y “manager touches”.
-                Evita listas eternas: mejor 8–12 ítems por fase + señales de calidad.
-              </div>
-            </div>
           </div>
 
           <div id="jwStep3" class="d-none">
@@ -1137,12 +1113,6 @@ function journeyWizardModal(){
                     <span class="badge oh-badge" id="jwReviewRole">—</span>
                     <span class="badge oh-badge" id="jwReviewIndustry">—</span>
                     <span class="badge oh-badge badge-success2">30/60/90</span>
-                  </div>
-
-                  <div class="oh-card-soft p-3 mt-3">
-                    <div class="text-muted-oh small">Expected impact</div>
-                    <div class="fw-semibold">Less manual work. More consistency. Real metrics.</div>
-                    <div class="text-muted-oh small">Pitch line para TFM: “Convertimos onboarding en un sistema medible, no un PDF.”</div>
                   </div>
                 </div>
               </div>
@@ -1176,7 +1146,6 @@ function journeyWizardModal(){
                   <div class="mt-3 text-muted-oh small">
                     Recommendation: si una fase tiene +15 tareas, dividir en “Required” y “Recommended”.
                   </div>
-
                 </div>
               </div>
             </div>
@@ -1274,7 +1243,5 @@ function saveWizardJourney(){
 
   toast("Journey created.", "success");
   bootstrap.Modal.getInstance($("#modalJourneyWizard")).hide();
-
-  // navigate to journeys to reinforce flow
   navigate("#/journeys");
 }
