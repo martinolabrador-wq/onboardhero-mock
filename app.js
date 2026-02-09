@@ -1,4 +1,4 @@
-/* OnboardHero Prototype — v2.0 (Branding + calmer UI) */
+/* OnboardHero Prototype — v2.1 (Branding + calmer UI + AI Templates demo) */
 
 const state = {
   session: ohLoad(OH_KEYS.session, { isAuthed: false }),
@@ -63,6 +63,17 @@ function getPeople(){ return ohLoad(OH_KEYS.people, []); }
 function setPeople(v){ ohSave(OH_KEYS.people, v); }
 function getSettings(){ return ohLoad(OH_KEYS.settings, OH_DEFAULTS.settings); }
 function setSettings(v){ ohSave(OH_KEYS.settings, v); }
+
+// --- Demo reset (safety) ---
+function resetDemoData(){
+  localStorage.removeItem(OH_KEYS.journeys);
+  localStorage.removeItem(OH_KEYS.people);
+  localStorage.removeItem(OH_KEYS.settings);
+  // keep session authed for demo continuity
+  ohEnsureDefaults();
+  toast("Demo reset: datos restaurados.", "success");
+  navigate("#/dashboard");
+}
 
 // --- Shell ---
 function renderShell(contentHtml){
@@ -394,6 +405,9 @@ function viewTemplates(){
           <button class="btn btn-outline-light btn-sm w-50" data-template="${t.id}" data-action="preview"><i class="bi bi-eye me-1"></i>Preview</button>
           <button class="btn btn-accent btn-sm w-50" data-template="${t.id}" data-action="use"><i class="bi bi-magic me-1"></i>Use</button>
         </div>
+        <button class="btn btn-outline-light btn-sm w-100 mt-2" data-template="${t.id}" data-action="ai">
+          <i class="bi bi-sparkles me-1"></i>Generate with AI
+        </button>
       </div>
     </div>
   `).join("");
@@ -405,7 +419,7 @@ function viewTemplates(){
         <div class="text-muted-oh">Start from proven playbooks. Customize in minutes. Keep quality consistent.</div>
       </div>
       <div class="oh-pill">
-        <i class="bi bi-shield-check me-2"></i><span class="text-muted-oh small">Best practice packs</span>
+        <i class="bi bi-shield-check me-2"></i><span class="text-muted-oh small">AI-ready packs</span>
       </div>
     </div>
 
@@ -536,7 +550,10 @@ function viewSettings(){
         <h2 class="fw-bold mb-1">Settings</h2>
         <div class="text-muted-oh">Make onboarding consistent with your brand and governance.</div>
       </div>
-      <button class="btn btn-accent" id="btnSaveSettings"><i class="bi bi-check2-circle me-1"></i>Save</button>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-light" id="btnResetDemo"><i class="bi bi-arrow-counterclockwise me-1"></i>Reset demo</button>
+        <button class="btn btn-accent" id="btnSaveSettings"><i class="bi bi-check2-circle me-1"></i>Save</button>
+      </div>
     </div>
 
     <div class="row g-3">
@@ -603,6 +620,9 @@ function bindViewEvents(hash){
         toast(`Template “${t.title}” applied (demo).`, "success");
         openJourneyWizard({ fromTemplate: t });
       }
+      if(action==="ai"){
+        openAIGenerator({ template: t });
+      }
     });
   }
   if(hash.startsWith("#/people")){
@@ -622,6 +642,7 @@ function bindViewEvents(hash){
     setTimeout(()=> initAnalyticsCharts(), 60);
   }
   if(hash.startsWith("#/settings")){
+    $("#btnResetDemo").addEventListener("click", resetDemoData);
     $("#btnSaveSettings").addEventListener("click", ()=>{
       const s = getSettings();
       s.brandName = $("#setBrandName").value.trim() || "OnboardHero";
@@ -779,10 +800,18 @@ function initAnalyticsCharts(){
   });
 }
 
-// --- Template preview (modal) ---
+// --- Global modals (template preview + AI generator) ---
 function bindGlobalModals(){
-  if($("#modalTemplatePreview")) return;
-  document.body.insertAdjacentHTML("beforeend", `
+  if(!$("#modalTemplatePreview")){
+    document.body.insertAdjacentHTML("beforeend", templatePreviewModal());
+  }
+  if(!$("#modalAIGen")){
+    document.body.insertAdjacentHTML("beforeend", aiGeneratorModal());
+  }
+}
+
+function templatePreviewModal(){
+  return `
   <div class="modal fade" id="modalTemplatePreview" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
       <div class="modal-content oh-card">
@@ -830,8 +859,7 @@ function bindGlobalModals(){
         </div>
       </div>
     </div>
-  </div>
-  `);
+  </div>`;
 }
 
 function openTemplatePreview(t){
@@ -845,6 +873,246 @@ function openTemplatePreview(t){
   };
 
   new bootstrap.Modal($("#modalTemplatePreview")).show();
+}
+
+/* ---------- AI Templates (simulated but credible) ---------- */
+
+let aiTemplateContext = null;
+
+function aiGeneratorModal(){
+  return `
+  <div class="modal fade" id="modalAIGen" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content oh-card">
+        <div class="modal-header border-0">
+          <div>
+            <div class="smallcaps">AI Templates</div>
+            <div class="fw-semibold">Generate a 30/60/90 journey</div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body pt-0">
+          <div class="oh-card-soft p-3">
+            <div class="text-muted-oh small">Context</div>
+            <div class="fw-semibold" id="aiContextTitle">—</div>
+
+            <div class="text-muted-oh small mt-3">Prompt</div>
+            <textarea id="aiPrompt" class="form-control oh-input mt-2" rows="4"
+              placeholder="Generate an onboarding journey for…"></textarea>
+
+            <div class="row g-2 mt-2">
+              <div class="col-6">
+                <label class="text-muted-oh small">Tone</label>
+                <select id="aiTone" class="form-select oh-input">
+                  <option>Professional</option>
+                  <option>Friendly</option>
+                  <option>Strict & compliance-focused</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="text-muted-oh small">Detail</label>
+                <select id="aiDetail" class="form-select oh-input">
+                  <option>Concise</option>
+                  <option selected>Balanced</option>
+                  <option>Detailed</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn btn-accent w-100 mt-3" id="btnAIGenerate">
+              <i class="bi bi-sparkles me-1"></i>Generate
+            </button>
+          </div>
+
+          <div class="mt-3 d-none" id="aiLoading">
+            <div class="skeleton" style="height:14px;width:60%;"></div>
+            <div class="skeleton mt-2" style="height:10px;width:90%;"></div>
+            <div class="skeleton mt-2" style="height:10px;width:85%;"></div>
+            <div class="skeleton mt-3" style="height:110px;width:100%;"></div>
+          </div>
+
+          <div class="mt-3 d-none" id="aiResultWrap">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="fw-semibold">Result (editable)</div>
+              <button class="btn btn-outline-light btn-sm" id="btnAIApply">
+                <i class="bi bi-check2-circle me-1"></i>Apply as Journey
+              </button>
+            </div>
+
+            <div class="row g-2 mt-2">
+              <div class="col-12 col-md-4">
+                <div class="oh-card-soft p-3">
+                  <div class="fw-semibold">30 days</div>
+                  <textarea id="ai30" class="form-control oh-input mt-2" rows="9"></textarea>
+                </div>
+              </div>
+              <div class="col-12 col-md-4">
+                <div class="oh-card-soft p-3">
+                  <div class="fw-semibold">60 days</div>
+                  <textarea id="ai60" class="form-control oh-input mt-2" rows="9"></textarea>
+                </div>
+              </div>
+              <div class="col-12 col-md-4">
+                <div class="oh-card-soft p-3">
+                  <div class="fw-semibold">90 days</div>
+                  <textarea id="ai90" class="form-control oh-input mt-2" rows="9"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="text-muted-oh small mt-3">
+              Demo note: This is a simulated AI generator designed to show product behavior, not model accuracy.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function openAIGenerator({template}){
+  aiTemplateContext = template;
+
+  $("#aiContextTitle").textContent = `${template.industry} — ${template.title}`;
+  const defaultPrompt = `Role: ${template.title}
+Industry: ${template.industry}
+Goal: reduce time-to-productivity and standardize onboarding.
+Include manager touchpoints and measurable outcomes (KPIs).
+Language: Spanish (Spain).`;
+  $("#aiPrompt").value = defaultPrompt;
+
+  $("#aiResultWrap").classList.add("d-none");
+  $("#aiLoading").classList.add("d-none");
+
+  // wire buttons fresh
+  $("#btnAIGenerate").onclick = ()=>{
+    $("#aiResultWrap").classList.add("d-none");
+    $("#aiLoading").classList.remove("d-none");
+
+    setTimeout(()=>{
+      $("#aiLoading").classList.add("d-none");
+      $("#aiResultWrap").classList.remove("d-none");
+
+      const tone = $("#aiTone").value;
+      const detail = $("#aiDetail").value;
+
+      const out = fakeAIGenerate(template, tone, detail, $("#aiPrompt").value);
+      $("#ai30").value = out.d30.join("\n");
+      $("#ai60").value = out.d60.join("\n");
+      $("#ai90").value = out.d90.join("\n");
+
+      toast("AI draft generated (demo).", "success");
+    }, 1100);
+  };
+
+  $("#btnAIApply").onclick = ()=>{
+    const journeys = getJourneys();
+    const id = "J-" + Math.floor(1000 + Math.random()*9000);
+
+    const j = {
+      id,
+      name: `${template.title} — AI Journey`,
+      role: normalizeRole(template.title),
+      industry: template.industry,
+      status: "Active",
+      updatedAt: nowIso(),
+      steps: {
+        d30: lines($("#ai30").value),
+        d60: lines($("#ai60").value),
+        d90: lines($("#ai90").value)
+      }
+    };
+
+    journeys.unshift(j);
+    setJourneys(journeys);
+
+    toast("Applied to Journeys.", "success");
+    bootstrap.Modal.getInstance($("#modalAIGen")).hide();
+    navigate("#/journeys");
+  };
+
+  new bootstrap.Modal($("#modalAIGen")).show();
+}
+
+function normalizeRole(title){
+  if(title.toLowerCase().includes("sdr")) return "Sales Development Rep";
+  if(title.toLowerCase().includes("ae")) return "Account Executive";
+  if(title.toLowerCase().includes("cs")) return "Customer Success";
+  if(title.toLowerCase().includes("hr")) return "HR Generalist";
+  return title;
+}
+
+function fakeAIGenerate(template, tone, detail, promptText){
+  // Base structure (credible + actionable)
+  const base30 = [
+    "Accesos y herramientas: cuentas, permisos, SSO (si aplica)",
+    "Mapa de stakeholders: HR, manager, buddy, equipo",
+    "Claridad de rol: expectativas, métricas y definición de éxito",
+    "Cultura y normas: valores, comunicación, forma de trabajar",
+    "Seguridad & compliance: políticas, privacidad, buenas prácticas",
+    "Primeras victorias: 1 entrega pequeña con feedback",
+    "Cadencia con manager: 1:1 kickoff + check-in semanal",
+    "Pulse check: bloqueos, claridad, sentimiento (mini encuesta)"
+  ];
+
+  const base60 = [
+    "Ownership progresivo: liderar 3 casos reales de principio a fin",
+    "Playbooks/SOPs: aprender → ejecutar → documentar mejoras",
+    "Calidad: checklist de “definition of done” + ejemplos",
+    "Colaboración cross-team: dependencias y handoffs claros",
+    "Revisión de métricas: progreso vs objetivos y gaps",
+    "Feedback 360 (ligero): buddy + manager + peer review",
+    "Manager review: week-6 (ajustes de foco y prioridades)"
+  ];
+
+  const base90 = [
+    "Autonomía: ejecutar el trabajo estándar sin supervisión",
+    "Proyecto de impacto: 1 mejora medible (tiempo, calidad o adopción)",
+    "Plan Q+1: prioridades, riesgos y plan de crecimiento",
+    "Knowledge sharing: documentación + mini sesión interna",
+    "Retrospectiva onboarding: qué funcionó y qué automatizar",
+    "Day-90 review: performance + career/growth plan"
+  ];
+
+  const managerTouches = [
+    "Manager touchpoint: kickoff 1:1",
+    "Manager touchpoint: day-14 feedback",
+    "Manager touchpoint: day-30 review",
+  ];
+
+  // Detail tuning
+  let extra = [];
+  if(detail === "Detailed"){
+    extra = ["Crear FAQ del rol", "Grabar walkthrough (5 min)", "Definir mapa de escalado y SLAs"];
+  } else if(detail === "Balanced"){
+    extra = ["Documentar aprendizajes clave"];
+  }
+
+  // Tone tuning (subtle)
+  const tonePrefix =
+    tone === "Friendly" ? "✅ " :
+    tone === "Strict & compliance-focused" ? "🛡️ " : "• ";
+
+  const d30 = base30.map(x=>tonePrefix + x).concat(extra.map(x=>tonePrefix + x));
+  const d60 = base60.map(x=>tonePrefix + x).concat(managerTouches.slice(0,2).map(x=>tonePrefix + x));
+  const d90 = base90.map(x=>tonePrefix + x).concat(managerTouches.slice(2).map(x=>tonePrefix + x));
+
+  // Light prompt influence (keywords)
+  const p = (promptText||"").toLowerCase();
+  if(p.includes("sales") || p.includes("sdr") || p.includes("ae")){
+    d30.unshift(tonePrefix + "Conocer ICP, propuesta de valor y pitch base");
+    d60.unshift(tonePrefix + "Simulaciones: 5 llamadas/objections con feedback");
+    d90.unshift(tonePrefix + "Objetivo: autonomía en pipeline + forecast hygiene");
+  }
+  if(p.includes("engineering") || p.includes("developer")){
+    d30.unshift(tonePrefix + "Setup local + repos + CI/CD + acceso a logs");
+    d60.unshift(tonePrefix + "Ownership de 1 módulo y 1 bugfix en producción");
+    d90.unshift(tonePrefix + "Mejora de performance/observability (impacto medible)");
+  }
+
+  return { d30, d60, d90 };
 }
 
 // --- People modal ---
@@ -943,7 +1211,6 @@ function openPersonModal(id){
   $("#personProg").textContent = `${p.progress || 0}%`;
   $("#personProgBar").style.width = `${p.progress || 0}%`;
 
-  // set status badge text
   const statusEl = $("#personStatus");
   statusEl.className = "badge oh-badge";
   statusEl.textContent = p.status;
@@ -980,12 +1247,12 @@ function openJourneyWizard(opts = {}){
   const fromTemplate = opts.fromTemplate || null;
 
   $("#jwName").value = fromTemplate ? `${fromTemplate.title} — 30/60/90` : "New journey — 30/60/90";
-  $("#jwRole").value = fromTemplate ? (fromTemplate.title.includes("SDR") ? "Sales Development Rep" : "Role") : "Role";
+  $("#jwRole").value = fromTemplate ? normalizeRole(fromTemplate.title) : "Role";
   $("#jwIndustry").value = fromTemplate ? fromTemplate.industry : "SaaS B2B";
 
-  $("#jw30").value = "Access & tools\nRole clarity\nBuddy system\nFirst wins";
-  $("#jw60").value = "Manager cadence\nPlaybooks\nSkill validation\nPeer feedback";
-  $("#jw90").value = "Autonomy\nKPIs ownership\nGrowth plan\nQuarter goals";
+  $("#jw30").value = "Accesos y herramientas\nClaridad de rol\nBuddy system\nPrimeras victorias";
+  $("#jw60").value = "Cadencia con manager\nPlaybooks\nValidación de skills\nPeer feedback";
+  $("#jw90").value = "Autonomía\nOwnership de KPIs\nPlan de crecimiento\nObjetivos de trimestre";
 
   setWizardStep(1);
 
